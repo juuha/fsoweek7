@@ -29,7 +29,7 @@ describe('<SimpleBlog />', () => {
     }
 
     const blogComponent = shallow(<SimpleBlog blog={simpleBlog} onClick={mockHandler}/>)
-  
+
     const button = blogComponent.find('button')
     button.simulate('click')
     button.simulate('click')

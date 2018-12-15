@@ -17,11 +17,11 @@ class BlogInList extends React.Component {
 
     return (
       <div style={blogStyle}>
-          <div>
-            <Link to={`blogs/${this.props.blog._id}`}>
-              {this.props.blog.title} {this.props.blog.author}
-            </Link>
-          </div>
+        <div>
+          <Link to={`blogs/${this.props.blog._id}`}>
+            {this.props.blog.title} {this.props.blog.author}
+          </Link>
+        </div>
       </div>
     )
   }

@@ -2,6 +2,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { BrowserRouter as Router, Route } from 'react-router-dom'
 import './index.css'
+import { Container, Form, Button } from 'semantic-ui-react'
 
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
@@ -51,13 +52,13 @@ class App extends React.Component {
     this.BlogForm.toggleVisibility()
     try{
       const blog = await blogService.create({
-       title: this.state.title,
-       author: this.state.author,
-       url: this.state.url
+        title: this.state.title,
+        author: this.state.author,
+        url: this.state.url
       })
 
       this.props.notify(`a new blog '${blog.title}' by ${blog.author} added`)
-      this.setState({ blogs:[...this.state.blogs, blog]})
+      this.setState({ blogs:[...this.state.blogs, blog] })
       this.setState({ title: '', author: '', url: '' })
     } catch (exception) {
       this.props.notify('Missing either title or url', true)
@@ -92,84 +93,90 @@ class App extends React.Component {
     const user = JSON.parse(window.localStorage.getItem('loggedInBlogUser'))
     if (user === null) {
       return (
-        <div className="notLogged">
-          <Navigation />
-          <Notification />
-          <h2>Log in to application</h2>
-          <form onSubmit={this.login}>
-            <div>
-              username:
-              <input
-                type="text"
-                name="username"
-                value={this.state.username}
-                onChange={this.handleTextFieldChange}
-              />
-            </div>
-            <div>
-              password:
-              <input
-                type="password"
-                name="password"
-                value={this.state.password}
-                onChange={this.handleTextFieldChange}
-              />
-            </div>
-            <div>
-              <button type="submit">login</button>
-            </div>
-          </form>
-        </div>
+        <Container>
+          <div className="notLogged">
+            <Notification />
+            <h2>Log in to application</h2>
+            <Form onSubmit={this.login}>
+              <Form.Field>
+                <label>username:</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={this.state.username}
+                  onChange={this.handleTextFieldChange}
+                />
+              </Form.Field>
+              <Form.Field>
+                <label>password:</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={this.state.password}
+                  onChange={this.handleTextFieldChange}
+                />
+              </Form.Field>
+              <div>
+                <Button color='blue' type="submit">login</Button>
+              </div>
+            </Form>
+          </div>
+        </Container>
       )
     }
     return (
-      <div className="logged">
-        <h2>Blog app</h2>
-        <Router>
-          <div>
-            <Navigation logout={this.logout} user={user}/>
-            <Notification user={user}/>
-            <Togglable buttonLabel="new blog" ref={ component => this.BlogForm = component }>
-              <BlogForm 
-                onSubmit={this.createBlog}
-                title={this.state.title}
-                author={this.state.author}
-                url={this.state.url}
-                handleChange={this.handleTextFieldChange}
-              />
-            </Togglable>
-
-            <Route exact path='/' render={() => 
+      <Container>
+        <div className="logged">
+          <h2>Blog app</h2>
+          <Router>
+            <div>
               <div>
-                  {this.props.blogs.sort((a, b) => b.likes - a.likes).map(blog => 
-                  <BlogInList
-                    key={blog._id} 
-                    blog={blog}
-                    user={user}
-                  />
-                )}
+                <Navigation logout={this.logout} user={user}/>
               </div>
-            }/>
+              <Notification/>
+              <div>
+                <br/>
+                <Togglable buttonLabel="new blog" ref={ component => this.BlogForm = component }>
+                  <BlogForm
+                    onSubmit={this.createBlog}
+                    title={this.state.title}
+                    author={this.state.author}
+                    url={this.state.url}
+                    handleChange={this.handleTextFieldChange}
+                  />
+                </Togglable>
+              </div>
+              <div>
+                <Route exact path='/' render={() =>
+                  <div>
+                    {this.props.blogs.sort((a, b) => b.likes - a.likes).map(blog =>
+                      <BlogInList
+                        key={blog._id}
+                        blog={blog}
+                      />
+                    )}
+                  </div>
+                }/>
+              </div>
 
-            <Route exact path='/users' render={() => <Users />} />
+              <Route exact path='/users' render={() => <Users />} />
 
-            <Route path='/users/:id' render={({match}) =>
-              <User userId={match.params.id} />
-            }/>
+              <Route path='/users/:id' render={({ match }) =>
+                <User userId={match.params.id} />
+              }/>
 
-            <Route path='/blogs/:id' render={({history, match}) =>
-              <Blog blogId={match.params.id} history={history} />
-            } />
-          </div>
-        </Router>
-        
-      </div>
+              <Route path='/blogs/:id' render={({ history, match }) =>
+                <Blog blogId={match.params.id} history={history} />
+              } />
+            </div>
+          </Router>
+        </div>
+      </Container>
     )
   }
 }
 
 const mapStateToProps = (state) => {
-  console.log(state)
   return {
     blogs: state.blogs ? state.blogs : []
   }

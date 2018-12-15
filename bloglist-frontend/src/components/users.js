@@ -1,6 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
+import { Table } from 'semantic-ui-react'
 
 class Users extends React.Component {
   render(){
@@ -10,22 +11,22 @@ class Users extends React.Component {
     return (
       <div>
         <h2>Users</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Blogs</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table striped collapsing>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Name</Table.HeaderCell>
+              <Table.HeaderCell>Blogs</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {this.props.users.map(user =>
-              <tr key={user.id}>
-                <td> <Link to={`/users/${user.id}`}>{user.name}</Link></td>
-                <td>{user.blogs.length}</td>
-              </tr>
+              <Table.Row key={user.id}>
+                <Table.Cell> <Link to={`/users/${user.id}`}>{user.name}</Link></Table.Cell>
+                <Table.Cell>{user.blogs.length}</Table.Cell>
+              </Table.Row>
             )}
-          </tbody>
-        </table>
+          </Table.Body>
+        </Table>
       </div>
     )
   }

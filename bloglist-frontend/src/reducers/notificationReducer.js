@@ -35,7 +35,7 @@ export const notify = (message, error) => {
     dispatch(setNotification(message, error))
     setTimeout(() => {
       dispatch(removeNotification())
-    }, 3000);
+    }, 3000)
   }
 }
 
@@ -43,7 +43,7 @@ export const notifyWithDispatch = (message, error, dispatch) => {
   dispatch(setNotification(message, error))
   setTimeout(() => {
     dispatch(removeNotification())
-  }, 3000);
+  }, 3000)
 }
 
 export default reducer

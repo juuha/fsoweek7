@@ -1,41 +1,40 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import { Button, Form } from 'semantic-ui-react'
 
 const BlogForm = ({ onSubmit, handleChange, title, author, url }) => {
   return (
     <div>
-      <form onSubmit={onSubmit}>
-        <div>
-          title:
+      <Form onSubmit={onSubmit}>
+        <Form.Field>
+          <label>Title:</label>
           <input
             type="text"
             name="title"
             value={title}
             onChange={handleChange}
           />
-        </div>
-        <div>
-          author:
+        </Form.Field>
+        <Form.Field>
+          <label>Author:</label>
           <input
             type="text"
             name="author"
             value={author}
             onChange={handleChange}
           />
-        </div>
-        <div>
-          url:
+        </Form.Field>
+        <Form.Field>
+          <label>Url:</label>
           <input
             type="text"
             name="url"
             value={url}
             onChange={handleChange}
           />
-        </div>
-        <div>
-          <button type="submit">create</button>
-        </div>
-      </form>
+        </Form.Field>
+        <Button inverted color='green' type="submit">create</Button>
+      </Form>
     </div>
   )
 }

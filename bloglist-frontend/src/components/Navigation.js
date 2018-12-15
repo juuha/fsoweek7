@@ -1,29 +1,43 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { NavLink } from 'react-router-dom'
+import { Menu, Button } from 'semantic-ui-react'
 
-class Navigation extends React.Component {
-  handleClick = () => (event) => {
+class Navigation extends React.Component{
+  static propTypes = {
+    logout: PropTypes.func.isRequired,
+    user: PropTypes.object.isRequired
+  }
+
+  handleLogoutClick = () => (event) => {
     event.preventDefault()
     this.props.logout()
   }
 
   render(){
-    const navBar = {
-      border: "solid 2px",
-      padding: 5,
-      marginBottom: 10,
-      borderColor: "pink",
-      display: "inline-block"
-    }
     if (this.props.user === undefined || this.props.user === null){
       return null
     }
     return(
-      <div style={navBar}>
-        <NavLink to='/'>Blogs</NavLink>&nbsp;
-        <NavLink to='/users'>Users</NavLink>&nbsp;
-        <i>{this.props.user.name} logged in</i>
-        <input type="button" value="logout" style={{margin: 5}} onClick={this.handleClick()}/>
+      <div>
+        <Menu tabular>
+          <Menu.Item
+            name='Blogs'
+            as={ NavLink }
+            exact to='/'
+          />
+          <Menu.Item
+            name='Users'
+            as={ NavLink }
+            exact to='/users'
+          />
+          <Menu.Item
+            name={`${this.props.user.name} logged in`}
+          />
+          <Menu.Item>
+            <Button inverted color='red' onClick={this.handleLogoutClick()}>Logout</Button>
+          </Menu.Item>
+        </Menu>
       </div>
     )
   }

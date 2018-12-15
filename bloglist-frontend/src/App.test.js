@@ -17,11 +17,11 @@ describe('<App />', () => {
       app.update()
       const notLoggedComponents = app.find('.notLogged')
       expect(notLoggedComponents.text()).toContain('password')
-      
+
       const loggedComponents = app.find('.logged')
       expect(loggedComponents.length).toEqual(0)
     })
-  })  
+  })
 
   describe('When user is logged in', () => {
     beforeEach(() => {
