@@ -1,31 +1,39 @@
 import React from 'react'
-import Blog from './components/Blog'
+import { connect } from 'react-redux'
+import { BrowserRouter as Router, Route } from 'react-router-dom'
+import './index.css'
+
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
+import BlogInList from './components/BlogInList'
 import BlogForm from './components/BlogForm'
+import Blog from './components/Blog'
+import Users from './components/users'
+import User from './components/user'
+import Navigation from './components/Navigation'
+
 import blogService from './services/blogs'
 import loginService from './services/login'
-import './index.css'
+
+import { notify } from './reducers/notificationReducer'
+import { initUsers } from './reducers/usersReducer'
+import { initBlogs } from './reducers/blogsReducer'
 
 class App extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      blogs: [],
       username: '',
       password: '',
       title: '',
       author: '',
-      url: '',
-      error: null,
-      message: null
+      url: ''
     }
   }
 
   componentDidMount() {
-    blogService.getAll().then(blogs =>
-      this.setState({ blogs })
-    )
+    this.props.initBlogs()
+    this.props.initUsers()
 
     const loggedInBlogUser = window.localStorage.getItem('loggedInBlogUser')
     if (loggedInBlogUser) {
@@ -48,64 +56,11 @@ class App extends React.Component {
        url: this.state.url
       })
 
-      this.setState({ message: `a new blog '${blog.title}' by ${blog.author} added` })
+      this.props.notify(`a new blog '${blog.title}' by ${blog.author} added`)
       this.setState({ blogs:[...this.state.blogs, blog]})
       this.setState({ title: '', author: '', url: '' })
-      setTimeout(() => {
-        this.setState({ message: null })
-      }, 5000)
     } catch (exception) {
-      this.setState({
-        error: 'Missing either title or url'
-      })
-      setTimeout(() => {
-        this.setState({ error: null })
-      }, 5000)
-    }
-  }
-
-  deleteBlog = async (blog) => {
-    try{
-      await blogService.remove(blog._id)
-      this.setState({ message: "Blog deleted successfully." })
-      const updatedBlogs = this.state.blogs.filter(b => b._id !== blog._id)
-      this.setState({
-        blogs: updatedBlogs
-      })
-      setTimeout(() => {
-        this.setState({ message: null })
-      }, 5000)
-    } catch (exception) {
-      this.setState({
-        error: 'Something went wrong.'
-      })
-      setTimeout(() => {
-        this.setState({ error: null })
-      }, 5000)
-    }
-  }
-
-  addLike = async (blog) => {
-    try{
-      const likedBlog = await blogService.update({
-        likes: blog.likes,
-        author: blog.author,
-        title: blog.title,
-        url: blog.url
-      }, blog._id)
-      
-
-      this.setState({ message: `Blog '${likedBlog.title}' has been liked.` })
-      setTimeout(() => {
-        this.setState({ message: null })
-      }, 5000)
-    } catch (exception) {
-      this.setState({
-        error: 'Something went wrong..'
-      })
-      setTimeout(() => {
-        this.setState({ error: null })
-      }, 5000)
+      this.props.notify('Missing either title or url', true)
     }
   }
 
@@ -120,32 +75,26 @@ class App extends React.Component {
       blogService.setToken(user.token)
       window.localStorage.setItem('loggedInBlogUser', JSON.stringify(user))
 
-      this.setState({ username: '', password: '', message: `Logged in as ${user.username}` })
-      setTimeout(() => {
-        this.setState({ message: null })
-      }, 5000)
+      this.props.notify(`Logged in as ${user.username}`)
+      this.setState({ username: '', password: '' })
     } catch (exception) {
-      this.setState({
-        error: 'Wrong username or password.'
-      })
-      setTimeout(() => {
-        this.setState({ error: null })
-      }, 5000)
+      this.props.notify('Wrong username or password.', true)
     }
   }
 
   logout = () => {
     window.localStorage.removeItem('loggedInBlogUser')
-    this.setState({ message: "Logged out." })
+    this.setState({})
+    this.props.notify('Logged out!')
   }
 
   render() {
     const user = JSON.parse(window.localStorage.getItem('loggedInBlogUser'))
-
     if (user === null) {
       return (
         <div className="notLogged">
-          <Notification error={this.state.error} message={this.state.message} />
+          <Navigation />
+          <Notification />
           <h2>Log in to application</h2>
           <form onSubmit={this.login}>
             <div>
@@ -175,34 +124,58 @@ class App extends React.Component {
     }
     return (
       <div className="logged">
-        <h2>blogs</h2>
-        <Notification error={this.state.error} message={this.state.message} />
-        <p>{user.name} logged in
-          <input type="button" value="logout" style={{margin: 5}} onClick={this.logout}/>
-        </p>
+        <h2>Blog app</h2>
+        <Router>
+          <div>
+            <Navigation logout={this.logout} user={user}/>
+            <Notification user={user}/>
+            <Togglable buttonLabel="new blog" ref={ component => this.BlogForm = component }>
+              <BlogForm 
+                onSubmit={this.createBlog}
+                title={this.state.title}
+                author={this.state.author}
+                url={this.state.url}
+                handleChange={this.handleTextFieldChange}
+              />
+            </Togglable>
 
-        <Togglable buttonLabel="new blog" ref={ component => this.BlogForm = component }>
-          <BlogForm 
-            onSubmit={this.createBlog}
-            title={this.state.title}
-            author={this.state.author}
-            url={this.state.url}
-            handleChange={this.handleTextFieldChange}
-          />
-        </Togglable>
+            <Route exact path='/' render={() => 
+              <div>
+                  {this.props.blogs.sort((a, b) => b.likes - a.likes).map(blog => 
+                  <BlogInList
+                    key={blog._id} 
+                    blog={blog}
+                    user={user}
+                  />
+                )}
+              </div>
+            }/>
 
-        {this.state.blogs.sort((a, b) => b.likes - a.likes).map(blog => 
-          <Blog 
-            key={blog._id} 
-            blog={blog} 
-            addLike={this.addLike}
-            deleteBlog={this.deleteBlog}
-            user={user}
-          />
-        )}
+            <Route exact path='/users' render={() => <Users />} />
+
+            <Route path='/users/:id' render={({match}) =>
+              <User userId={match.params.id} />
+            }/>
+
+            <Route path='/blogs/:id' render={({history, match}) =>
+              <Blog blogId={match.params.id} history={history} />
+            } />
+          </div>
+        </Router>
+        
       </div>
     )
   }
 }
 
-export default App;
+const mapStateToProps = (state) => {
+  console.log(state)
+  return {
+    blogs: state.blogs ? state.blogs : []
+  }
+}
+
+export default connect(
+  mapStateToProps,
+  { notify, initUsers, initBlogs }
+)(App)

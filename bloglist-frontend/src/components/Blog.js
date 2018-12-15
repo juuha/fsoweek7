@@ -1,71 +1,56 @@
 import React from 'react'
-import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
+
+import { like, remove, addComment } from '../reducers/blogsReducer'
 
 class Blog extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      visible: false,
-      likes: this.props.blog.likes
-    }
-  }
-  static propTypes = {
-    blog: PropTypes.object.isRequired,
-    addLike: PropTypes.func.isRequired,
-    deleteBlog: PropTypes.func.isRequired,
-    user: PropTypes.object.isRequired
+  remove = () => {
+    this.props.remove(this.props.blog)
+    this.props.history.push('/')
   }
 
-  toggleVisible = () => {
-    this.setState({
-      visible: !this.state.visible
-    })
-  }
-
-  handleClickLike = (event) => {
+  sendComment = (event) => {
     event.preventDefault()
-    this.props.blog.likes = this.props.blog.likes + 1
-    this.setState({
-      likes: this.state.likes + 1
-    })
-    this.props.addLike(this.props.blog)
+    const comment = event.target.comment.value
+    this.props.addComment(this.props.blog, comment)
+    event.target.comment.value = ''
   }
 
-  handleClickDelete = (event) => {
-    event.preventDefault()
-    if (window.confirm(`delete '${this.props.blog.title}' by ${this.props.blog.author}?`)){
-      this.props.deleteBlog(this.props.blog)
-    }
-  }
-
-  render() {
-    const blogStyle = {
-      paddingTop: 10,
-      paddingLeft: 2,
-      border: 'solid',
-      borderWidth: 1,
-      marginBottom: 5
-    }
-
-    const showWhenVisible = { display: this.state.visible ? '' : 'none', margin: 5}
-
-    const username = this.props.blog.user ? this.props.blog.user.name : 'no one'
-
-    const showForOwner = { display: (!this.props.blog.user) || (this.props.blog.user.name === this.props.user.name) ? '' : 'none' } 
-
-    return (
-      <div style={blogStyle}>
-        <div className="visible">
-          <a onClick={this.toggleVisible} className="button">
-          {this.props.blog.title} {this.props.blog.author}
-          </a>
+  render(){
+    const { blog } = this.props
+    const user = window.localStorage.getItem('loggedInBlogUser')
+    
+    if (blog === null || blog === undefined) return null
+    const canDelete = blog.user === undefined || blog.user.username === JSON.parse(user).username
+    return(
+      <div>
+        <h2>{blog.title}</h2>
+        <div>
+          <a href={blog.url}>{blog.url}</a>
         </div>
-        <div style={showWhenVisible} className="hidden">
-          <a href={this.props.blog.url}>{this.props.blog.url}</a><br/>
-          {this.state.likes} likes <button style={{backgroundColor: "lime"}} onClick={this.handleClickLike}>like</button><br/>
-          added by {username} <br/>
-          <div style={showForOwner}>
-            <button style={{backgroundColor: "pink"}} onClick={this.handleClickDelete}>delete</button>
+        <div>
+          {blog.likes} likes! <button onClick={() => this.props.like(blog)}>like</button>
+        </div>
+        <div>
+          added by {blog.user ? blog.user.name : 'no one'}
+        </div>
+        <div>
+          {canDelete && <div>
+            <button onClick={this.remove}>delete</button>  
+          </div>}
+        </div>
+        <div>
+          <h4>Comments:</h4>
+          <ul>
+            {blog.comments.map((comment, key) => 
+              <li key={key}>{comment}</li>   
+            )}
+          </ul>
+          <div>
+            <form onSubmit={this.sendComment}>
+              <input name='comment'></input>
+              <button type='submit'>Add comment!</button>
+            </form>
           </div>
         </div>
       </div>
@@ -73,4 +58,16 @@ class Blog extends React.Component {
   }
 }
 
-export default Blog
+const mapStateToProps = (state, { blogId }) => {
+  if (state.blogs === null) {
+    return { blog: null }
+  }
+  return {
+    blog: state.blogs.find(blog => blog._id === blogId)
+  }
+}
+
+export default connect(
+  mapStateToProps,
+  { like, remove, addComment }
+)(Blog)
